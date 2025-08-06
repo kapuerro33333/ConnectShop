@@ -1,5 +1,6 @@
 import pytest
 from playwright.sync_api import sync_playwright
+from fixtures.search_fixtures import *
  
 @pytest.fixture(scope="session")
 def browser():
@@ -14,3 +15,4 @@ def page(browser):
     page = context.new_page()
     yield page
     context.close()
+
