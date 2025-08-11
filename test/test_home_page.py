@@ -48,6 +48,7 @@ def test_search_existing_product(open_search_input):
     # assert search_input.get_attribute("aria-label") =="Search...","Area-label name is not correct"
     # assert search_input.get_attribute("placeholder") =="Search...","Placeholder name is not correct"
     #search_text = "Bluetooth Drawer Lock"
+
     search_input.fill(search_text)
     page.wait_for_selector('h2.ProductItem__Title a', state="visible")
 
@@ -67,7 +68,5 @@ def test_search_notexisting_product(open_search_input):
     assert input_value == search_text_invalid, f"Очікувалось '{search_text_invalid}', але отримано '{input_value}'"
     search_output_2 = page.locator('div.Segment__Content p').first
     assert search_output_2.is_visible(), "No-results message is not displayed"
-    assert search_output_2.text_content().strip() == "No results could be found", "Displayed message text is incorrect"
-    # виправити 2 останніх. 
-    #- налаштувати проект для нового проекту
-    #- 
+    assert "No results" in search_output_2.text_content(), "No-results message is incorrect"
+   

@@ -1,9 +1,6 @@
 import pytest
 
-@pytest.fixture
-def open_connected_shop(page):
-    page.goto("https://theconnectedshop.com")
-    return page
+
 
 @pytest.fixture
 def open_search_input(open_connected_shop):
