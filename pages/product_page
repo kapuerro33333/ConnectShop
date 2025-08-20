@@ -26,7 +26,19 @@ class SearchPage(BasePage):
         assert any(search_text.lower() in r for r in results), \
             f"'{search_text}' not found in search results: {results}"
  
-    def run_test_search_notexisting_product(self):
-        message_text, input_value = self.search_invalid_product(search_text_invalid)
-        assert input_value == search_text_invalid, "Incorrect input value"
-        assert "no results" in message_text.lower(), f"Unexpected message: {message_text}"
+        self.results_links.first.click()
+
+       
+        initial_count = self._get_cart_count()
+
+     
+        self.add_to_cart_button.click()
+
+      
+        new_count = self._get_cart_count()
+        assert new_count == initial_count + 1, \
+            f"Cart count did not increase. Before: {initial_count}, After: {new_count}"
+
+    def _get_cart_count(self) -> int:
+        text = self.cart_count.inner_text().strip()
+        return int(text) if text.isdigit() else 0

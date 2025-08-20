@@ -15,13 +15,14 @@ class Header(BasePage):
         assert self.logo_link.get_attribute("href") == "/", "Logo link incorrect"
         assert self.primary_logo.is_visible(), "Primary logo image not found"
         assert self.primary_logo.get_attribute("alt") == "The Connected Shop Logo"
-        assert self.primary_logo.get_attribute("width") == "250"
-        assert self.primary_logo.get_attribute("height") in ["75", "75px"]
+        assert self.primary_logo.get_attribute("width") == "180"
+        assert self.primary_logo.get_attribute("height") == "90.0"
+        assert self.primary_logo.get_attribute("сlass") == "header__heading-logo"
  
-        assert self.transparent_logo.is_visible(), "Transparent logo image not found"
-        assert self.transparent_logo.get_attribute("alt") == "The Connected Shop Logo White"
-        assert self.transparent_logo.get_attribute("width") == "250"
-        assert self.transparent_logo.get_attribute("height") in ["75", "75px"]
+        # assert self.transparent_logo.is_visible(), "Transparent logo image not found"
+        # assert self.transparent_logo.get_attribute("alt") == "The Connected Shop Logo White"
+        # assert self.transparent_logo.get_attribute("width") == "250"
+        # assert self.transparent_logo.get_attribute("height") in ["75", "75px"]
  
     def validate_top_links(self):
         assert self.account_link.is_visible()

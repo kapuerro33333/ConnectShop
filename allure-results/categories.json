@@ -1,0 +1,14 @@
+[{
+        "name": "Critical tests",
+        "matchedStatuses": ["failed"],
+        "messageRegex": ".*"
+    },
+    {
+        "name": "Search tests",
+        "matchedPackages": ["Search"]
+    },
+    {
+        "name": "Homepage tests",
+        "matchedPackages": ["Homepage"]
+    }
+]
