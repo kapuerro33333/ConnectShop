@@ -1,32 +1,32 @@
-from config.searchdata import search_text, search_text_invalid
-from pages.base_page import BasePage
- 
-class SearchPage(BasePage):
-    def __init__(self, page):
-        super().__init__(page)
-        self.search_input = page.locator('input[name="q"]')
-        self.results_links = page.locator('h2.ProductItem__Title a')
-        self.no_results_msg = page.locator('div.Segment__Content p')
- 
-    def _search(self, text: str, wait_selector: str):
-        self.search_input.fill(text)
-        self.page.wait_for_selector(wait_selector, state='visible', timeout=10000)
- 
-    def search_product(self, text: str):
-        self._search(text, 'h2.ProductItem__Title a, div.Segment__Content p')
-        return [t.strip().lower() for t in self.results_links.all_text_contents()]
- 
-    def search_invalid_product(self, text: str):
-        self._search(text, 'div.Segment__Content p')
-        message = (self.no_results_msg.first.text_content() or "").strip()
-        return message, self.search_input.input_value()
- 
-    def run_test_search_existing_product(self):
-        results = self.search_product(search_text)
-        assert any(search_text.lower() in r for r in results), \
-            f"'{search_text}' not found in search results: {results}"
- 
-    def run_test_search_notexisting_product(self):
-        message_text, input_value = self.search_invalid_product(search_text_invalid)
-        assert input_value == search_text_invalid, "Incorrect input value"
-        assert "no results" in message_text.lower(), f"Unexpected message: {message_text}"
+import allure
+from playwright.sync_api import Page, expect
+from config.searchdata import search_text as search_text_valid
+
+
+class SearchPage:
+    def __init__(self, page: Page):
+        self.page = page
+        # Поле пошуку в хедері (inline)
+        self.search_input = page.locator("#Search-In-Inline")
+        # Беремо лише перший заголовок товару, щоб уникнути strict-mode
+        self.product_title = page.locator(
+            "a.full-unstyled-link .card__heading__product-title"
+        ).first
+        # Точне повідомлення Shopify-теми при відсутності результатів
+        self.no_results_message = page.locator("p.alert.alert--warning")
+
+    @allure.step("Search for valid product")
+    def search_product(self) -> str:
+        """Шукає валідний товар (з config.searchdata.search_text) та повертає назву першого результату."""
+        self.search_input.fill(search_text_valid)
+        self.search_input.press("Enter")
+        expect(self.product_title).to_be_visible(timeout=5000)
+        return self.product_title.inner_text().strip()
+
+    @allure.step("Search for invalid product: {invalid_text}")
+    def search_invalid_product(self, invalid_text: str) -> str:
+        """Шукає неіснуючий товар і повертає текст повідомлення 'No results found ...'."""
+        self.search_input.fill(invalid_text)
+        self.search_input.press("Enter")
+        expect(self.no_results_message).to_be_visible(timeout=5000)
+        return self.no_results_message.inner_text().strip()

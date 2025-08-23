@@ -1,3 +1,37 @@
-# Created by pytest automatically.
-.pytest_cache/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
 
+# Virtual env
+.venv/
+env/
+venv/
+ENV/
+
+# Pytest
+.pytest_cache/
+.cache/
+
+# Allure
+allure-results/        # JSON-результати (не зберігаємо)
+# зберігаємо allure-report/, бо хочемо бачити в GitHub Pages
+# allure-report/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS junk
+.DS_Store
+Thumbs.db

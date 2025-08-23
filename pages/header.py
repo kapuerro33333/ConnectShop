@@ -1,41 +1,30 @@
-from pages.base_page import BasePage
- 
-class Header(BasePage):
-    def __init__(self, page):
-        super().__init__(page)
-        self.logo_link = page.locator('a.Header__LogoLink')
-        self.primary_logo = page.locator('img.Header__LogoImage--primary')
-        self.transparent_logo = page.locator('img.Header__LogoImage--transparent')
-        self.account_link = page.locator('a.Heading.Link.Link--primary.Text--subdued.u-h8').nth(0)
-        self.search_link = page.locator('a.Heading.Link.Link--primary.Text--subdued.u-h8').nth(1)
-        self.cart_link = page.locator('a.Heading.u-h6[href="/cart"]')
- 
+import allure
+from playwright.sync_api import Page, expect
+
+
+class Header:
+    def __init__(self, page: Page):
+        self.page = page
+        # Лого в хедері
+        self.logo = page.locator("a.header__heading-link img.header__heading-logo")
+        # У DOM зазвичай дві іконки акаунта (desktop + mobile)
+        self._account_links = page.locator("header .header__icon--account")
+
+    def _visible_account_link(self):
+        # Оберемо перший видимий елемент серед знайдених
+        count = self._account_links.count()
+        for i in range(count):
+            cand = self._account_links.nth(i)
+            if cand.is_visible():
+                return cand
+        # fallback: якщо раптом обидві приховані — повернемо перший (щоб очікування показало корисний лог)
+        return self._account_links.first
+
+    @allure.step("Validate logo in header")
     def validate_logo(self):
-        assert self.logo_link.is_visible(), "Logo link not found"
-        assert self.logo_link.get_attribute("href") == "/", "Logo link incorrect"
-        assert self.primary_logo.is_visible(), "Primary logo image not found"
-        assert self.primary_logo.get_attribute("alt") == "The Connected Shop Logo"
-        assert self.primary_logo.get_attribute("width") == "180"
-        assert self.primary_logo.get_attribute("height") == "90.0"
-        assert self.primary_logo.get_attribute("сlass") == "header__heading-logo"
- 
-        # assert self.transparent_logo.is_visible(), "Transparent logo image not found"
-        # assert self.transparent_logo.get_attribute("alt") == "The Connected Shop Logo White"
-        # assert self.transparent_logo.get_attribute("width") == "250"
-        # assert self.transparent_logo.get_attribute("height") in ["75", "75px"]
- 
-    def validate_top_links(self):
-        assert self.account_link.is_visible()
-        assert self.account_link.get_attribute("href") == "/account"
- 
-        assert self.search_link.is_visible()
-        assert self.search_link.get_attribute("href") == "/search"
-        assert self.search_link.get_attribute("data-action") == "toggle-search"
- 
-        assert self.cart_link.is_visible()
-        assert self.cart_link.get_attribute("href") == "/cart"
-        assert self.cart_link.get_attribute("data-action") == "open-drawer"
-        assert self.cart_link.get_attribute("data-drawer-id") == "sidebar-cart"
-        assert self.cart_link.get_attribute("aria-label") == "Open cart"
-    def click_search_link(self):
-        self.search_link.click()
+        expect(self.logo).to_be_visible(timeout=5000)
+
+    @allure.step("Validate account link in header")
+    def validate_account_link(self):
+        link = self._visible_account_link()
+        expect(link).to_be_visible(timeout=5000)

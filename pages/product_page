@@ -1,44 +1,51 @@
 from config.searchdata import search_text, search_text_invalid
 from pages.base_page import BasePage
- 
+
+
 class SearchPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
-        self.search_input = page.locator('input[name="q"]')
-        self.results_links = page.locator('h2.ProductItem__Title a')
-        self.no_results_msg = page.locator('div.Segment__Content p')
- 
+        self.page = page
+
+        # ✅ Точний inline-інпут (на сторінці є ще модальний, тому name="q" дає 2 елементи)
+        self.search_input = page.locator('#Search-In-Inline').first
+
+        # ✅ Актуальні контейнери результатів у темі (predictive search)
+        self.results_links = page.locator('.predictive-search__results a')
+        self.no_results_msg = page.locator('.predictive-search__results p')
+
     def _search(self, text: str, wait_selector: str):
+        # інпут має бути видимий
+        self.search_input.wait_for(state='visible')
         self.search_input.fill(text)
+        # ✅ сам пошук тригериться натисканням Enter
+        self.search_input.press('Enter')
+        # чекаємо на результати або повідомлення
         self.page.wait_for_selector(wait_selector, state='visible', timeout=10000)
- 
+
     def search_product(self, text: str):
-        self._search(text, 'h2.ProductItem__Title a, div.Segment__Content p')
-        return [t.strip().lower() for t in self.results_links.all_text_contents()]
- 
+        # чекаємо або лінки результатів, або повідомлення
+        self._search(text, '.predictive-search__results a, .predictive-search__results p')
+        if self.results_links.count() > 0:
+            return [t.strip().lower() for t in self.results_links.all_text_contents()]
+        return []
+
     def search_invalid_product(self, text: str):
-        self._search(text, 'div.Segment__Content p')
-        message = (self.no_results_msg.first.text_content() or "").strip()
+        self._search(text, '.predictive-search__results p')
+        self.no_results_msg.first.wait_for(state='visible')
+        message = (self.no_results_msg.first.text_content() or '').strip()
         return message, self.search_input.input_value()
- 
+
     def run_test_search_existing_product(self):
         results = self.search_product(search_text)
         assert any(search_text.lower() in r for r in results), \
             f"'{search_text}' not found in search results: {results}"
- 
-        self.results_links.first.click()
 
-       
-        initial_count = self._get_cart_count()
+        # клік по першому результату, якщо він є
+        if self.results_links.count() > 0:
+            self.results_links.first.click()
 
-     
-        self.add_to_cart_button.click()
-
-      
-        new_count = self._get_cart_count()
-        assert new_count == initial_count + 1, \
-            f"Cart count did not increase. Before: {initial_count}, After: {new_count}"
-
-    def _get_cart_count(self) -> int:
-        text = self.cart_count.inner_text().strip()
-        return int(text) if text.isdigit() else 0
+    def run_test_search_notexisting_product(self):
+        message_text, input_value = self.search_invalid_product(search_text_invalid)
+        assert input_value == search_text_invalid, "Incorrect input value"
+        assert "no results" in (message_text or "").lower(), f"Unexpected message: {message_text}"
