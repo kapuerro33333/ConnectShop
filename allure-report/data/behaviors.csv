@@ -1,0 +1,5 @@
+"BROKEN","EPIC","FAILED","FEATURE","PASSED","SKIPPED","STORY","UNKNOWN"
+"0","Critical tests","0","Homepage & Search","1","0","Search existing product","0"
+"0","Critical tests","0","Homepage & Search","1","0","Search non-existing product","0"
+"0","Cart tests","0","Cart","1","0","Add existing product to cart","0"
+"0","Critical tests","0","Homepage & Search","1","0","Open homepage and validate header","0"

@@ -1,16 +1,20 @@
 import pytest
 import allure
-from playwright.sync_api import expect
-
 from pages.header import Header
 from pages.search_page import SearchPage
-from config.searchdata import search_text as search_text_valid, search_text_invalid
+from pages.product_page import ProductPage
+from config.searchdata import search_text, search_text_invalid
+from faker import Faker
 
 
+faker = Faker()
+
+@allure.epic("Critical tests")
 @allure.feature("Homepage & Search")
 class TestHeaderAndSearch:
 
     @pytest.mark.header
+    @pytest.mark.smoke
     @allure.story("Open homepage and validate header")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_open_homepage_and_header(self, open_connected_shop):
@@ -28,35 +32,55 @@ class TestHeaderAndSearch:
             header.validate_account_link()
 
     @pytest.mark.search
+    @pytest.mark.smoke
     @allure.story("Search existing product")
-    @allure.severity(allure.severity_level.NORMAL)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_search_existing_product(self, open_search_input):
         page, _ = open_search_input
-        sp = SearchPage(page)
-
-        with allure.step(f"Search for valid product: '{search_text_valid}'"):
-            first_title = sp.search_product()
-
-        with allure.step("Validate first search result contains searched text"):
-            assert search_text_valid.lower() in first_title.lower(), (
-                f"Expected product title to contain '{search_text_valid}', got '{first_title}'"
-            )
+        with allure.step(f"Search for valid product: {search_text}"):
+            SearchPage(page).run_test_search_existing_product()
 
     @pytest.mark.search
     @allure.story("Search non-existing product")
     @allure.severity(allure.severity_level.MINOR)
     def test_search_not_existing_product(self, open_search_input):
-        page, search_input = open_search_input
-        sp = SearchPage(page)
+        page, _ = open_search_input
+        with allure.step(f"Search for invalid product: {search_text_invalid}"):
+            SearchPage(page).run_test_search_notexisting_product()
 
-        with allure.step(f"Search for invalid product: '{search_text_invalid}'"):
-            message = sp.search_invalid_product(search_text_invalid)
 
-        with allure.step("Validate 'no results' message is displayed"):
-            assert "No results found" in message, (
-                f"Expected 'No results found' message, got '{message}'"
-            )
+# --- Додатковий smoke: add to cart (опційно, якщо вже додали ProductPage) ---
 
+
+@allure.epic("Cart tests")
+@allure.feature("Cart")
+class TestCartFlow:
+
+    @pytest.mark.smoke
+    @allure.story("Add existing product to cart")
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_add_existing_product_to_cart(self, open_search_input):
+        page, _ = open_search_input
+
+        with allure.step(f"Search and open search results for: {search_text}"):
+            sp = SearchPage(page)
+            # Пошук (оверлей або грід) — лише перевірка, що результат є
+            sp.run_test_search_existing_product()
+
+            # Гарантовано потрапляємо на сторінку з грідом /search:
+            if "/search" not in page.url:
+                view_all = page.locator("a.search__view-all, a:has-text('View all results')").first
+                if view_all.count() > 0 and view_all.is_visible():
+                    view_all.click()
+                else:
+                    # fallback: просто Enter у хедерному інпуті
+                    page.locator("#Search-In-Inline").first.press("Enter")
+
+            # чекаємо, поки у гріді будуть посилання на продукти
+            page.wait_for_selector("a.full-unstyled-link[href*='/products/']", state="visible", timeout=10000)
+
+        with allure.step("Click 'Add to cart' and validate cart"):
+            ProductPage(page).add_to_cart()
     # дописати fill, existing_product,non_existing product.
     # тести виправити - локатори, падають.
     # виставити пріоритет алюре.

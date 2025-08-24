@@ -1,1 +1,0 @@
-{"uuid": "4b481446-92b5-44e2-9339-8b4bbe6d69a9", "children": ["9a7d54c2-7ed7-43f0-a8c4-7d0b8191f594"], "befores": [{"name": "open_connected_shop", "status": "passed", "start": 1755882077524, "stop": 1755882081574}], "afters": [{"name": "open_connected_shop::0", "status": "passed", "start": 1755882112821, "stop": 1755882113028}], "start": 1755882077524, "stop": 1755882113028}
