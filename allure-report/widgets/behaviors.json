@@ -1,1 +1,1 @@
-{"total":2,"items":[{"uid":"f01b49b0dc3b1a81c9934faf2c6c2d46","name":"Critical tests","statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1}},{"uid":"548760bec8c2e5ef3c1a6d0cd53a8042","name":"Cart tests","statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1}}]}
+{"total":1,"items":[{"uid":"9a8c092f4cf64ac798ae2efc641ae7e9","name":"Connected Shop Tests","statistic":{"failed":0,"broken":0,"skipped":0,"passed":4,"unknown":0,"total":4}}]}

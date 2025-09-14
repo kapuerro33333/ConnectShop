@@ -1,22 +1,23 @@
 import pytest
 import allure
+from faker import Faker
+
 from pages.header import Header
 from pages.search_page import SearchPage
 from pages.product_page import ProductPage
-from config.searchdata import search_text, search_text_invalid
-from faker import Faker
-
+from config.searchdata import search_text, search_text_invalid, get_random_search_value
 
 faker = Faker()
 
-@allure.epic("Critical tests")
-@allure.feature("Homepage & Search")
+
+@allure.epic("Connected Shop Tests")
+@allure.feature("Homepage & Header")
 class TestHeaderAndSearch:
 
     @pytest.mark.header
     @pytest.mark.smoke
     @allure.story("Open homepage and validate header")
-    @allure.severity(allure.severity_level.CRITICAL)
+    @allure.severity(allure.severity_level.BLOCKER)
     def test_open_homepage_and_header(self, open_connected_shop):
         page = open_connected_shop
         header = Header(page)
@@ -49,10 +50,7 @@ class TestHeaderAndSearch:
             SearchPage(page).run_test_search_notexisting_product()
 
 
-# --- Додатковий smoke: add to cart (опційно, якщо вже додали ProductPage) ---
-
-
-@allure.epic("Cart tests")
+@allure.epic("Connected Shop Tests")
 @allure.feature("Cart")
 class TestCartFlow:
 
@@ -64,25 +62,94 @@ class TestCartFlow:
 
         with allure.step(f"Search and open search results for: {search_text}"):
             sp = SearchPage(page)
-            # Пошук (оверлей або грід) — лише перевірка, що результат є
             sp.run_test_search_existing_product()
 
-            # Гарантовано потрапляємо на сторінку з грідом /search:
+            # гарантуємо /search
             if "/search" not in page.url:
-                view_all = page.locator("a.search__view-all, a:has-text('View all results')").first
+                view_all = page.locator(
+                    "a.search__view-all, a:has-text('View all results'):visible"
+                ).first
                 if view_all.count() > 0 and view_all.is_visible():
                     view_all.click()
                 else:
-                    # fallback: просто Enter у хедерному інпуті
                     page.locator("#Search-In-Inline").first.press("Enter")
 
-            # чекаємо, поки у гріді будуть посилання на продукти
-            page.wait_for_selector("a.full-unstyled-link[href*='/products/']", state="visible", timeout=10000)
+            page.wait_for_selector(
+                "a.full-unstyled-link[href*='/products/']",
+                state="visible",
+                timeout=10000,
+            )
 
         with allure.step("Click 'Add to cart' and validate cart"):
             ProductPage(page).add_to_cart()
-    # дописати fill, existing_product,non_existing product.
-    # тести виправити - локатори, падають.
+
+
+@allure.epic("Connected Shop Tests")
+@allure.feature("Search (Optional)")
+class TestRandomSearch:
+
+    @pytest.mark.search
+    @pytest.mark.optional
+    @allure.story("Search random product from predefined list")
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_search_random_product(self, open_search_input):
+        page, _ = open_search_input
+        q = get_random_search_value()
+
+        with allure.step(f"Search for random product: '{q}'"):
+            page.locator("#Search-In-Inline").fill(q)
+            page.locator("#Search-In-Inline").press("Enter")
+            page.wait_for_selector(
+                "a.full-unstyled-link[href*='/products/'], p.alert.alert--warning",
+                state="visible",
+                timeout=10000,
+            )
+
+        with allure.step("Attach screenshot of search results"):
+            allure.attach(
+                page.screenshot(),
+                name=f"Search_{q}",
+                attachment_type=allure.attachment_type.PNG,
+            )
+
+        with allure.step("Validate results or no-results message"):
+            has_products = page.locator("a.full-unstyled-link[href*='/products/']").count() > 0
+            has_no_results = page.locator("p.alert.alert--warning").is_visible()
+
+            if has_products:
+                allure.attach(
+                    body=f"Results found for: {q}",
+                    name="Search result info",
+                    attachment_type=allure.attachment_type.TEXT,
+                )
+            elif has_no_results:
+                allure.attach(
+                    body=f"No results found for: {q}",
+                    name="Search result info",
+                    attachment_type=allure.attachment_type.TEXT,
+                )
+            else:
+                pytest.fail(f"No products and no 'No results' message for query '{q}'")
     # виставити пріоритет алюре.
-    # додати товар що існує, і той, що не існує - заглушка.
     # Faker скачати бібліотеку
+    # негативні кейси: негативне значення, забрати товар з корзини.  
+    # окремо розписати Add to cart 
+    # API повторити
+    
+    
+# import random
+# SEARCH_VALUES = [
+#     "smart door lock",
+#     "wifi camera",
+#     "robot vacuum",
+#     "doorbell",
+#     "bluetooth speaker",
+#     "gaming headset",
+#     "wireless charger",
+#     "laptop stand",
+#     "mechanical keyboard",
+#     "usb hub"
+# ]
+# def get_random_search_value() -> str:
+#     return random.choice(SEARCH_VALUES)
+ 
